@@ -1,0 +1,4 @@
+C:\Users\Pablo Cardona\source\repos\ATM2.0\ATM2.0\bin\Debug\netcoreapp3.0\ATM2.0.exe
+C:\Users\Pablo Cardona\source\repos\ATM2.0\ATM2.0\obj\Debug\netcoreapp3.0\ATM2.0.csprojAssemblyReference.cache
+C:\Users\Pablo Cardona\source\repos\ATM2.0\ATM2.0\obj\Debug\netcoreapp3.0\ATM2.0.AssemblyInfoInputs.cache
+C:\Users\Pablo Cardona\source\repos\ATM2.0\ATM2.0\obj\Debug\netcoreapp3.0\ATM2.0.AssemblyInfo.cs
