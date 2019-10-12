@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Text;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ATM2._0
 {
@@ -21,15 +23,8 @@ namespace ATM2._0
         public string pApellido { get; set; }
         public string sApellido { get; set; }
 
-        public Usuario( int nCuenta, int NIP, string pNombre, string sNombre, string pApellido, string sApellido)
-        {
-            this.nCuenta = nCuenta;
-            this.NIP = NIP;
-            this.pApellido = pApellido;
-            this.sApellido = sApellido;
-            this.pNombre = pNombre;
-            this.sNombre = sNombre;
-        }
+        [ForeignKey("tipoUsuario")]
+        public TipoUsuario tipo { get; set; }
 
     }
 }
