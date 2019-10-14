@@ -14,7 +14,7 @@ namespace ATM2._0
         [Key]
         public int nCuenta { get; set; }
         [Required]
-        public int NIP { get; set; }
+        public string NIP { get; set; }
 
         [Required]
         public string pNombre { get; set; }
@@ -22,6 +22,8 @@ namespace ATM2._0
         [Required]
         public string pApellido { get; set; }
         public string sApellido { get; set; }
+
+        public double saldo { get; set; }
 
         [ForeignKey("tipoUsuario")]
         public TipoUsuario tipo { get; set; }
