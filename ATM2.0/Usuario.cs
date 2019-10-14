@@ -25,8 +25,17 @@ namespace ATM2._0
 
         public double saldo { get; set; }
 
+        public ICollection<Transaccion> transacciones { get; set; }
+
         [ForeignKey("tipoUsuario")]
         public TipoUsuario tipo { get; set; }
+
+       public Usuario()
+        {
+            transacciones = new List<Transaccion>();
+        }
+
+
 
     }
 }

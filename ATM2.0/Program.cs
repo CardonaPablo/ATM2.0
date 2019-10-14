@@ -17,18 +17,19 @@ namespace ATM2._0
             //{
             //    Usuario nuevoUsuario = new Usuario();
             //    var tipos = db.TipoUsuario.ToList();
-            //    nuevoUsuario.nCuenta = 11111;
-            //    var plainTextBytes = System.Text.Encoding.UTF8.GetBytes("12345");
+            //    nuevoUsuario.nCuenta = 54321;
+            //    var plainTextBytes = System.Text.Encoding.UTF8.GetBytes("54321");
             //    nuevoUsuario.NIP = Convert.ToBase64String(plainTextBytes);
-            //    nuevoUsuario.pNombre = "Pruebas";
-            //    nuevoUsuario.sNombre = null;
-            //    nuevoUsuario.pApellido = "Test";
-            //    nuevoUsuario.sApellido = null;
+            //    nuevoUsuario.pNombre = "Jose";
+            //    nuevoUsuario.sNombre = "Francisco";
+            //    nuevoUsuario.pApellido = "Medina";
+            //    nuevoUsuario.sApellido = "Aguayo";
             //    nuevoUsuario.saldo = 15800.0;
             //    nuevoUsuario.tipo = tipos[0];
             //    db.Usuario.Add(nuevoUsuario);
             //    Console.WriteLine(db.SaveChanges());
             //}
+           //c.SeleccionaMes();
             c.Login();
             
 

@@ -12,11 +12,13 @@ namespace ATM2._0
     public class Cajero
     {
         private int moneyAmount { get; set; }
-        public Usuario currentUser { get; set; }
+        public Usuario currentUser { get; set; }    
+        List<string> meses = new List<string>() { "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
         public Cajero()
         {
             moneyAmount = 10000;
             currentUser = new Usuario();
+
         }
 
         //Este metodo dibuja el login del cajero para acceder a los datos del usuario en la base de datos
@@ -50,44 +52,54 @@ namespace ATM2._0
                 //Comprueba que los datos obtenidos por medio del teclado correspondan con algun registro en la base de datos
                 using (var db = new Banco())
                 {
-                    var users = db.Usuario.ToList();
-                    foreach (Usuario u in users)
+                    //Tansformarlo a query
+                    var plainTextBytes = Encoding.UTF8.GetBytes(nip.ToString());
+                    var tipos = db.TipoUsuario.ToList();
+                    try
                     {
-                        var tipos = db.TipoUsuario.ToList();
-                        var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(nip.ToString());
-                        if (numeroDeCuenta == u.nCuenta && Convert.ToBase64String(plainTextBytes) == u.NIP)
-                        {
-                            currentUser = u;
-                            MostrarMenuPrincipal();
-
-                        }
-
+                        currentUser = db.Usuario.Single(u => numeroDeCuenta == u.nCuenta && Convert.ToBase64String(plainTextBytes) == u.NIP);
                     }
-                    if (currentUser == null) 
-                    { 
-                    Console.WriteLine("El numero de cuenta o NIP ingresados son incorrectos");
-                    System.Threading.Thread.Sleep(2250);
+                    catch (InvalidOperationException)
+                    {
+                        Console.WriteLine("El numero de cuenta o NIP ingresados son incorrectos");
+                        System.Threading.Thread.Sleep(2250);
+                        continue;
                     }
                 }
+                if (currentUser.tipo.id == 1)
+                    UsuarioMenuPrincipal();
+                else
+                    GerenteMenuPrincipal();
             }
         }
 
+
+        public void ActualizarUsuario()
+        {
+            using (var db = new Banco())
+            currentUser = db.Usuario.Single(s => s.nCuenta == currentUser.nCuenta);
+        }
+
         //Este método dibuja el menú principal y nos permite manejar las opciones de operaciones dispinibles en el cajero
-        private void MostrarMenuPrincipal()
+        private void UsuarioMenuPrincipal()
         {
             while (true)
             {
+
+                ActualizarUsuario();
                 Console.Clear();
+                Console.WriteLine($"Nombre: {currentUser.pNombre} {currentUser.pApellido} ");
+                Console.WriteLine($"N° De Cuenta: {currentUser.nCuenta}\n");
                 ConsoleKeyInfo opcionMenu;
                 //Se muestra un menú con las operaciones disponibles del ATM
-                Console.WriteLine("Presione el número de la operación que desea realizar \n[1] Solicitud de Saldo  \n[2] Retiro \n[3] Depósito \n[4] Salir");
+                Console.WriteLine("Presione el número de la operación que desea realizar \n[1] Solicitud de Saldo  \n[2] Retiro \n[3] Depósito \n[4] Ver historial\n[5] Salir");
                 opcionMenu = Console.ReadKey(true);
                 Console.Clear();
                 //Maneja las opciones del menu basado en la tecla presionada
                 switch (opcionMenu.KeyChar)
                 {
                     case '1':
-                        ConsultaSaldo();
+                        ConsultaSaldoUsuario();
                         break;
                     case '2':
                         Console.WriteLine("Retiro");
@@ -97,6 +109,9 @@ namespace ATM2._0
                         Deposito();
                         break;
                     case '4':
+                        HistorialUsuario();
+                        break;
+                    case '5':
                         //Vuelve al login
                         Console.WriteLine("Salir");
                         return;
@@ -109,7 +124,81 @@ namespace ATM2._0
                 }
             }
         }
-        private void ConsultaSaldo()
+
+        private void GerenteMenuPrincipal()
+        {
+            while (true)
+            {
+
+                ActualizarUsuario();
+                Console.Clear();
+                Console.WriteLine($"Nombre: {currentUser.pNombre} {currentUser.pApellido} ");
+                Console.WriteLine($"N° De Cuenta: {currentUser.nCuenta}\n");
+                ConsoleKeyInfo opcionMenu;
+                //Se muestra un menú con las operaciones disponibles del ATM
+                Console.WriteLine("Presione el número de la operación que desea realizar \n[1] Reportes de Transaccion  \n[2] Revisar Usuario [3] Salir");
+                opcionMenu = Console.ReadKey(true);
+                Console.Clear();
+                //Maneja las opciones del menu basado en la tecla presionada
+                switch (opcionMenu.KeyChar)
+                {
+                    case '1':
+                        ReportesTransaccion();
+                        break;
+                    case '2':
+                        
+                        break;
+                    case '3':
+                        //Vuelve al login
+                        Console.WriteLine("Salir");
+                        return;
+                    default:
+                        Console.WriteLine("\nDigite una opcion válida");
+                        System.Threading.Thread.Sleep(750);
+                        break;
+                }
+            }
+        }
+
+        private void ReportesTransaccion()
+        {
+            Console.Clear();
+            ConsoleKeyInfo opcionMenu;
+            //Se muestra un menú con las operaciones disponibles del ATM
+            Console.WriteLine("Presione el número de la operación que desea realizar \n" +
+                "[1] Total Depositos por Mes  \n[2] Numero de Depositos Por Mes\n" +
+                "[3] Total Retiros por Mes  \n[4] Numero de Retiros Por Mes\n" +
+                "[5] Salir");
+            opcionMenu = Console.ReadKey(true);
+            Console.Clear();
+            //Maneja las opciones del menu basado en la tecla presionada
+            switch (opcionMenu.KeyChar)
+            {
+                case '1':
+                    
+                    break;
+                case '2':
+
+                    break;
+                case '3':
+
+                    break;
+                case '4':
+
+                    break;
+                case '5':
+                    Console.WriteLine("Salir");
+                    return;
+                default:
+                    Console.WriteLine("\nDigite una opcion válida");
+                    System.Threading.Thread.Sleep(750);
+                    break;
+            }
+        }
+
+
+
+        private void ConsultaSaldoUsuario()
         {
             //El objeto currentUser contiene la informacion del usuario extraida de la base de datos
             //Se muestra el saldo disponible, almacenado en el atributo saldoActual
@@ -242,8 +331,138 @@ namespace ATM2._0
                 }
             }
         }
+       
+        public int SeleccionaMes()
+        {
+            ConsoleKeyInfo k;
+            int mes;
+            do
+            {
+                Console.WriteLine("Selecciona un mes (Enter para mes actual)");
+                for (int i = 0; i < meses.Count(); i++)
+                {
+                    Console.WriteLine($"[{i + 1}] {meses[i]}");
+                }
+                    k = Console.ReadKey(true);
+                    mes = Convert.ToInt32(k.KeyChar)-48;
+                    if (mes == -35)
+                        mes = DateTime.Now.Month;
+            } while (mes < 1 || mes > 12);
+            Console.Clear();
+            return mes;
+        }
 
+        public void HistorialUsuario()
+        {
 
+            ConsoleKeyInfo opcionMenu;
+            //Se muestra un menú con las operaciones disponibles del ATM
+            Console.WriteLine("Ver: \n[1] Consultas de Saldo \n[2] Retiros \n[3] Depósitos\n[4] Salir");
+            opcionMenu = Console.ReadKey(true);
+            Console.Clear();
+            //Maneja las opciones del menu basado en la tecla presionada
+            switch (opcionMenu.KeyChar)
+            {
+                case '1':
+                    Console.WriteLine("Consultas de Saldo");
+                    VerConsultas(SeleccionaMes());
+                    break;
+                case '2':
+                    Console.WriteLine("Retiros");
+                    VerRetiros(SeleccionaMes());
+                    break;
+                case '3':
+                    Console.WriteLine("Depositos");
+                    VerDepositos(SeleccionaMes());
+                    break;
+            }
+        }
+
+        private void VerConsultas( int mes)
+        {
+            using (var db = new Banco())
+            {
+                var Transacciones = db.Transaccion.ToList();
+                var tiposConcepto = db.TipoConcepto.ToList();
+                currentUser.transacciones = db.Transaccion.Where(t => t._usuario == currentUser).Include(transaccion => transaccion.detalles).ToList();
+
+                bool vacio = false;
+                foreach (var transaccion in currentUser.transacciones)
+                {
+                    transaccion.detalles = transaccion.detalles.Where(w => w.fecha.Month == mes && w.tipo == db.TipoConcepto.Single(s => s.nombre == "consulta")).OrderByDescending(t => t.id).ToList();
+                    if (transaccion.detalles.Count() == 0)
+                        vacio = true;
+                    foreach (var detalle in transaccion.detalles)
+                    {
+                        Console.WriteLine("<------------------------------------------->");
+                        Console.WriteLine($"Fecha: {detalle.fecha}");
+                        Console.WriteLine($"Concepto: {detalle.concepto}");
+                    }
+                }
+                if (vacio)
+                    Console.WriteLine("No hay Resultados");
+                Console.WriteLine("Presione una tecla para continuar");
+            }
+            Console.ReadLine();
+            return;
+        }
+        private void VerRetiros(int mes)
+        {
+            using (var db = new Banco())
+            {
+                var Transacciones = db.Transaccion.ToList();
+                var tiposConcepto = db.TipoConcepto.ToList();
+                currentUser.transacciones = db.Transaccion.Where(t => t._usuario == currentUser).Include(transaccion => transaccion.detalles).ToList();
+                bool vacio = false;
+                foreach (var transaccion in currentUser.transacciones)
+                {
+                    transaccion.detalles = transaccion.detalles.Where(w => w.fecha.Month == mes && w.tipo == db.TipoConcepto.Single(s => s.nombre == "retiro")).OrderByDescending(t => t.id).ToList();
+                    if (transaccion.detalles.Count() == 0)
+                        vacio = true;
+                    foreach (var detalle in transaccion.detalles)
+                    {
+                        Console.WriteLine("<------------------------------------------->");
+                        Console.WriteLine($"Fecha: {detalle.fecha}");
+                        Console.WriteLine($"Monto: {detalle.monto}");
+                    }
+                }
+                if (vacio)
+                    Console.WriteLine("No hay Resultados");
+                Console.WriteLine("Presione una tecla para continuar");
+            }
+            Console.ReadLine();
+            return;
+        }
+        private void VerDepositos(int mes)
+        {
+            using (var db = new Banco())
+            {
+                var Transacciones = db.Transaccion.ToList();
+                var tiposConcepto = db.TipoConcepto.ToList();
+                var usuarios = db.Usuario.ToList();
+                currentUser.transacciones = db.Transaccion.Where(t => t._usuario == currentUser).Include(transaccion => transaccion.detalles).ToList();
+                bool vacio = true;
+                foreach (var transaccion in currentUser.transacciones)
+                {
+                    transaccion.detalles = transaccion.detalles.Where(w => w.fecha.Month == mes && w.tipo == db.TipoConcepto.Single(s => s.nombre == "deposito")).OrderByDescending(t => t.id).ToList();
+                    if (transaccion.detalles.Count() == 0)
+                        vacio = true;
+                    foreach (var detalle in transaccion.detalles)
+                    {
+                        Console.WriteLine("<------------------------------------------->");
+                        Console.WriteLine($"Fecha: {detalle.fecha}");
+                        Console.WriteLine($"Monto: {detalle.monto}");
+                        Console.WriteLine($"Concepto: {detalle.concepto}");
+                        Console.WriteLine($"Destinatario: {detalle._destinatario.pNombre} {detalle._destinatario.pApellido}");
+                    }
+                }
+                if (vacio)
+                    Console.WriteLine("No hay Resultados");
+                Console.WriteLine("Presione una tecla para continuar");
+            }
+            Console.ReadLine();
+            return;
+        }
 
         //Este método dibuja el menú para escoger las opciones de retiro de efectivo
         private void Retiro()
@@ -254,7 +473,7 @@ namespace ATM2._0
                 int montoRetiro = 0;
                 Console.Clear();
                 //Muestra las opciones posibles de retiro 
-                Console.WriteLine("Presione el número correspondiente al monto que desea retirar \n[1] $20 \n[2] $40 \n[3] $60 \n[4] $100 \n[5] $200 \n[0] Cancelar Operación");
+                Console.WriteLine("Presione el número correspondiente al monto que desea retirar \n[1] $20 \n[2] $40 \n[3] $60 \n[4] $100 \n[5] $200 \n[6] Personalizado\n[0] Cancelar Operación");
                 opcionRetiro = Console.ReadKey(true);
                 Console.Clear();
                 //Dependiendo de la opcion elegida se asigna un valor a montoRetiro o se cancela la operación
@@ -263,7 +482,7 @@ namespace ATM2._0
                     case '0':
                         Console.WriteLine("Operación Cancelada");
                         System.Threading.Thread.Sleep(750);
-                        MostrarMenuPrincipal();
+                        UsuarioMenuPrincipal();
                         break;
                     case '1':
                         montoRetiro = 20;
@@ -279,6 +498,11 @@ namespace ATM2._0
                         break;
                     case '5':
                         montoRetiro = 200;
+                        break;
+                    case '6':
+                        Console.Clear();
+                        Console.WriteLine("Digite el monto a retirar:");
+                        montoRetiro = Convert.ToInt32(Console.ReadLine());
                         break;
                     default:
                         Console.WriteLine("Seleccione una opcion válida");
