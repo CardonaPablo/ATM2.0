@@ -208,15 +208,16 @@ namespace ATM2._0
             Console.ReadKey(true);
             using (var db = new Banco())
             {
-                //Crea una transaccion nueva
-                Transaccion transaccion = new Transaccion();
-                transaccion._usuario = db.Usuario.Single(s => s.nCuenta == currentUser.nCuenta);
                 //Crea un detalle nuevo
                 Detalle detalle = new Detalle();
                 detalle.fecha = DateTime.Now;
-                detalle._transaccion = transaccion;
                 detalle.concepto = db.TipoConcepto.Single(s => s.id == 2).nombre;
                 detalle.tipo = db.TipoConcepto.Single(s => s.id == 2);
+                //Crea una transaccion nueva
+                Transaccion transaccion = new Transaccion();
+                transaccion._usuario = db.Usuario.Single(s => s.nCuenta == currentUser.nCuenta);
+                transaccion._detalle = detalle;
+               
                 //Actualizar las tablas
                 db.Transaccion.Add(transaccion);
                 db.Detalle.Add(detalle);
@@ -308,17 +309,17 @@ namespace ATM2._0
                         //Modifica la propiedad saldo y le suma la cantidad depositada convertida a pesos
                         destinatario.saldo += (montoDeposito/100);
                         moneyAmount += montoDeposito / 100;
-                        //Crea una transaccion nueva
-                        Transaccion transaccion = new Transaccion();
-                        transaccion._usuario = usuario;
                         //Crea un detalle nuevo
                         Detalle detalle = new Detalle();
                         detalle.fecha = DateTime.Now;
-                        detalle._transaccion = transaccion;
                         detalle.tipo = db.TipoConcepto.Single(s => s.id == 3);
-                        detalle.monto = (montoDeposito/100);
+                        detalle.monto = (montoDeposito / 100);
                         detalle.concepto = concepto != null ? concepto : db.TipoConcepto.Single(s => s.id == 3).nombre;
                         detalle._destinatario = destinatario;
+                        //Crea una transaccion nueva
+                        Transaccion transaccion = new Transaccion();
+                        transaccion._usuario = usuario;
+                        transaccion._detalle = detalle;
                         //Actualizar las tablas
                         db.Transaccion.Add(transaccion);
                         db.Detalle.Add(detalle);
@@ -365,103 +366,59 @@ namespace ATM2._0
             {
                 case '1':
                     Console.WriteLine("Consultas de Saldo");
-                    VerConsultas(SeleccionaMes());
+                    VerTransaccion(SeleccionaMes(), "consulta");
                     break;
                 case '2':
                     Console.WriteLine("Retiros");
-                    VerRetiros(SeleccionaMes());
+                    VerTransaccion(SeleccionaMes(), "retiro");
                     break;
                 case '3':
                     Console.WriteLine("Depositos");
-                    VerDepositos(SeleccionaMes());
+                    VerTransaccion(SeleccionaMes(), "deposito");
                     break;
             }
         }
 
-        private void VerConsultas( int mes)
-        {
-            using (var db = new Banco())
-            {
-                var Transacciones = db.Transaccion.ToList();
-                var tiposConcepto = db.TipoConcepto.ToList();
-                currentUser.transacciones = db.Transaccion.Where(t => t._usuario == currentUser).Include(transaccion => transaccion.detalles).ToList();
-
-                bool vacio = false;
-                foreach (var transaccion in currentUser.transacciones)
-                {
-                    transaccion.detalles = transaccion.detalles.Where(w => w.fecha.Month == mes && w.tipo == db.TipoConcepto.Single(s => s.nombre == "consulta")).OrderByDescending(t => t.id).ToList();
-                    if (transaccion.detalles.Count() == 0)
-                        vacio = true;
-                    foreach (var detalle in transaccion.detalles)
-                    {
-                        Console.WriteLine("<------------------------------------------->");
-                        Console.WriteLine($"Fecha: {detalle.fecha}");
-                        Console.WriteLine($"Concepto: {detalle.concepto}");
-                    }
-                }
-                if (vacio)
-                    Console.WriteLine("No hay Resultados");
-                Console.WriteLine("Presione una tecla para continuar");
-            }
-            Console.ReadLine();
-            return;
-        }
-        private void VerRetiros(int mes)
-        {
-            using (var db = new Banco())
-            {
-                var Transacciones = db.Transaccion.ToList();
-                var tiposConcepto = db.TipoConcepto.ToList();
-                currentUser.transacciones = db.Transaccion.Where(t => t._usuario == currentUser).Include(transaccion => transaccion.detalles).ToList();
-                bool vacio = false;
-                foreach (var transaccion in currentUser.transacciones)
-                {
-                    transaccion.detalles = transaccion.detalles.Where(w => w.fecha.Month == mes && w.tipo == db.TipoConcepto.Single(s => s.nombre == "retiro")).OrderByDescending(t => t.id).ToList();
-                    if (transaccion.detalles.Count() == 0)
-                        vacio = true;
-                    foreach (var detalle in transaccion.detalles)
-                    {
-                        Console.WriteLine("<------------------------------------------->");
-                        Console.WriteLine($"Fecha: {detalle.fecha}");
-                        Console.WriteLine($"Monto: {detalle.monto}");
-                    }
-                }
-                if (vacio)
-                    Console.WriteLine("No hay Resultados");
-                Console.WriteLine("Presione una tecla para continuar");
-            }
-            Console.ReadLine();
-            return;
-        }
-        private void VerDepositos(int mes)
+        private void VerTransaccion( int mes, string tipo)
         {
             using (var db = new Banco())
             {
                 var Transacciones = db.Transaccion.ToList();
                 var tiposConcepto = db.TipoConcepto.ToList();
                 var usuarios = db.Usuario.ToList();
-                currentUser.transacciones = db.Transaccion.Where(t => t._usuario == currentUser).Include(transaccion => transaccion.detalles).ToList();
-                bool vacio = true;
+                currentUser.transacciones = db.Transaccion.Where(t => t._usuario == currentUser
+                && t._detalle.tipo == db.TipoConcepto.Single(s => s.nombre == tipo)
+                && t._detalle.fecha.Month == mes)
+                .Include(transaccion => transaccion._detalle).ToList();
                 foreach (var transaccion in currentUser.transacciones)
                 {
-                    transaccion.detalles = transaccion.detalles.Where(w => w.fecha.Month == mes && w.tipo == db.TipoConcepto.Single(s => s.nombre == "deposito")).OrderByDescending(t => t.id).ToList();
-                    if (transaccion.detalles.Count() == 0)
-                        vacio = true;
-                    foreach (var detalle in transaccion.detalles)
+                    switch (tipo)
                     {
-                        Console.WriteLine("<------------------------------------------->");
-                        Console.WriteLine($"Fecha: {detalle.fecha}");
-                        Console.WriteLine($"Monto: {detalle.monto}");
-                        Console.WriteLine($"Concepto: {detalle.concepto}");
-                        Console.WriteLine($"Destinatario: {detalle._destinatario.pNombre} {detalle._destinatario.pApellido}");
+                        case "consulta":
+                            Console.WriteLine("<------------------------------------------->");
+                            Console.WriteLine($"Fecha: {transaccion._detalle.fecha}");
+                            Console.WriteLine($"Concepto: {transaccion._detalle.concepto}");
+                            break;
+                        case "retiro":
+                            Console.WriteLine("<------------------------------------------->");
+                            Console.WriteLine($"Fecha: {transaccion._detalle.fecha}");
+                            Console.WriteLine($"Monto: {transaccion._detalle.monto}");
+                            break;
+                        case "deposito":
+                            Console.WriteLine("<------------------------------------------->");
+                            Console.WriteLine($"Fecha: {transaccion._detalle.fecha}");
+                            Console.WriteLine($"Monto: {transaccion._detalle.monto}");
+                            Console.WriteLine($"Concepto: {transaccion._detalle.concepto}");
+                            Console.WriteLine($"Destinatario: {transaccion._detalle._destinatario.pNombre} {transaccion._detalle._destinatario.pApellido}");
+                            break;
                     }
                 }
-                if (vacio)
+                if (currentUser.transacciones.Count() == 0)
                     Console.WriteLine("No hay Resultados");
                 Console.WriteLine("Presione una tecla para continuar");
             }
             Console.ReadLine();
-            return;
+
         }
 
         //Este método dibuja el menú para escoger las opciones de retiro de efectivo
@@ -536,16 +493,16 @@ namespace ATM2._0
                         //Update el usuario
                         var usuario = db.Usuario.Single(s => s.nCuenta == currentUser.nCuenta);
                         usuario.saldo -= montoRetiro;
-                        //Crea una transaccion nueva
-                        Transaccion transaccion = new Transaccion();
-                        transaccion._usuario = usuario;
                         //Crea un detalle nuevo
                         Detalle detalle = new Detalle();
                         detalle.fecha = DateTime.Now;
-                        detalle._transaccion = transaccion;
                         detalle.concepto = db.TipoConcepto.Single(s => s.id == 1).nombre;
                         detalle.tipo = db.TipoConcepto.Single(s => s.id == 1);
                         detalle.monto = montoRetiro;
+                        //Crea una transaccion nueva
+                        Transaccion transaccion = new Transaccion();
+                        transaccion._usuario = usuario;
+                        transaccion._detalle = detalle;
                         //Actualizar las tablas
                         db.Transaccion.Add(transaccion);
                         db.Detalle.Add(detalle);

@@ -16,8 +16,7 @@ namespace ATM2._0
         public int monto { get; set; }
         [ForeignKey("destinatario")]
         public Usuario _destinatario { get; set; }
-        [ForeignKey("transaccion")]
-        public Transaccion _transaccion{ get; set; }
+        
         public string concepto { get; set; }
         [ForeignKey("tipoConcepto")]
         public TipoConcepto tipo { get; set; }

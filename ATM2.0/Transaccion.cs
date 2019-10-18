@@ -14,11 +14,9 @@ namespace ATM2._0
         public int id { get; set; }
         [ForeignKey("usuario")]
         public Usuario _usuario { get; set; }
-        public ICollection<Detalle> detalles { get; set; }
-        public Transaccion()
-        {
-            detalles = new List<Detalle>();
-        }
+        [ForeignKey("detalle")]
+        public Detalle _detalle { get; set; }
+       
     }
     
 
