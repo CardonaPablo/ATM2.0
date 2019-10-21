@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Globalization;
 
 namespace ATM2._0
 {
@@ -13,7 +14,6 @@ namespace ATM2._0
     {
         private int moneyAmount { get; set; }
         public Usuario currentUser { get; set; }    
-        List<string> meses = new List<string>() { "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
         public Cajero()
         {
             moneyAmount = 10000;
@@ -85,7 +85,6 @@ namespace ATM2._0
         {
             while (true)
             {
-
                 ActualizarUsuario();
                 Console.Clear();
                 Console.WriteLine($"Nombre: {currentUser.pNombre} {currentUser.pApellido} ");
@@ -99,17 +98,16 @@ namespace ATM2._0
                 switch (opcionMenu.KeyChar)
                 {
                     case '1':
-                        ConsultaSaldoUsuario();
+                        currentUser.ConsultaSaldo();
                         break;
                     case '2':
-                        Console.WriteLine("Retiro");
-                        Retiro();
+                        moneyAmount = currentUser.Retiro(moneyAmount);
                         break;
                     case '3':
-                        Deposito();
+                        moneyAmount += currentUser.Deposito();
                         break;
                     case '4':
-                        HistorialUsuario();
+                        currentUser.HistorialUsuario();
                         break;
                     case '5':
                         //Vuelve al login
@@ -125,7 +123,7 @@ namespace ATM2._0
             }
         }
 
-        private void GerenteMenuPrincipal()
+        public void GerenteMenuPrincipal()
         {
             while (true)
             {
@@ -136,17 +134,17 @@ namespace ATM2._0
                 Console.WriteLine($"N° De Cuenta: {currentUser.nCuenta}\n");
                 ConsoleKeyInfo opcionMenu;
                 //Se muestra un menú con las operaciones disponibles del ATM
-                Console.WriteLine("Presione el número de la operación que desea realizar \n[1] Reportes de Transaccion  \n[2] Revisar Usuario [3] Salir");
+                Console.WriteLine("Presione el número de la operación que desea realizar \n[1] Reportes de Transaccion  \n[2] Revisar Usuario \n[3] Salir");
                 opcionMenu = Console.ReadKey(true);
                 Console.Clear();
                 //Maneja las opciones del menu basado en la tecla presionada
                 switch (opcionMenu.KeyChar)
                 {
                     case '1':
-                        ReportesTransaccion();
+                        Gerente.ReportesTransaccion();
                         break;
                     case '2':
-                        
+                        Gerente.RevisarUsuario();
                         break;
                     case '3':
                         //Vuelve al login
@@ -160,357 +158,35 @@ namespace ATM2._0
             }
         }
 
-        private void ReportesTransaccion()
-        {
-            Console.Clear();
-            ConsoleKeyInfo opcionMenu;
-            //Se muestra un menú con las operaciones disponibles del ATM
-            Console.WriteLine("Presione el número de la operación que desea realizar \n" +
-                "[1] Total Depositos por Mes  \n[2] Numero de Depositos Por Mes\n" +
-                "[3] Total Retiros por Mes  \n[4] Numero de Retiros Por Mes\n" +
-                "[5] Salir");
-            opcionMenu = Console.ReadKey(true);
-            Console.Clear();
-            //Maneja las opciones del menu basado en la tecla presionada
-            switch (opcionMenu.KeyChar)
-            {
-                case '1':
-                    
-                    break;
-                case '2':
-
-                    break;
-                case '3':
-
-                    break;
-                case '4':
-
-                    break;
-                case '5':
-                    Console.WriteLine("Salir");
-                    return;
-                default:
-                    Console.WriteLine("\nDigite una opcion válida");
-                    System.Threading.Thread.Sleep(750);
-                    break;
-            }
-        }
-
-
-
-        private void ConsultaSaldoUsuario()
-        {
-            //El objeto currentUser contiene la informacion del usuario extraida de la base de datos
-            //Se muestra el saldo disponible, almacenado en el atributo saldoActual
-            Console.WriteLine("Solicitud de Saldo");
-            Console.WriteLine("Su saldo actual es de " + currentUser.saldo);
-            Console.WriteLine("Presione una tecla para volver al Menu Principal");
-            Console.ReadKey(true);
-            using (var db = new Banco())
-            {
-                //Crea un detalle nuevo
-                Detalle detalle = new Detalle();
-                detalle.fecha = DateTime.Now;
-                detalle.concepto = db.TipoConcepto.Single(s => s.id == 2).nombre;
-                detalle.tipo = db.TipoConcepto.Single(s => s.id == 2);
-                //Crea una transaccion nueva
-                Transaccion transaccion = new Transaccion();
-                transaccion._usuario = db.Usuario.Single(s => s.nCuenta == currentUser.nCuenta);
-                transaccion._detalle = detalle;
-               
-                //Actualizar las tablas
-                db.Transaccion.Add(transaccion);
-                db.Detalle.Add(detalle);
-                db.SaveChanges();
-            }
-        }
-
-
-        public void Deposito()
-        {
-            bool valid = false;
-            string concepto = null;
-            int cuentaD = 0;
-
-            int montoDeposito;
-            //Se crea un nuevo timer con periodo de 2 minutos
-            Timer tiempoDeposito = new Timer(120000);
-            //Se desactiva el autoreinicio del timer cuando termine
-            tiempoDeposito.AutoReset = false;
-            //Se asigna la funcion OnTimedEvent para manejar el evento del timer llegando a 0
-            tiempoDeposito.Elapsed += OnTimedEvent;
-            //Se ejecuta cuando el timer llega a cero
-            void OnTimedEvent(Object source, System.Timers.ElapsedEventArgs e)
-            {
-                //Se muestra en pantalla un mensaje de error por 1.5 segundos y vuelve al menú principal
-                Console.WriteLine("Transacción cancelada por timeout");
-                System.Threading.Thread.Sleep(1500);
-                //Apagamos el timer
-                tiempoDeposito.Enabled = false;
-                return;
-            }
-
-            ConsoleKeyInfo opcionMenu;
-            Console.WriteLine("Depósito");
-            Console.WriteLine("[1] Deposito a cuenta propia\n[2] Deposito a otra cuenta\n[3] Cancelar");
-            opcionMenu = Console.ReadKey(true);
-            switch( opcionMenu.KeyChar)
-            {
-                case '1':
-                    cuentaD = currentUser.nCuenta;
-                    break;
-                case '2':
-                    using (var db = new Banco()) {
-                        while (!valid)
-                        {
-                            Console.WriteLine("Digite el numero de cuenta del destinatario");
-                            cuentaD = Convert.ToInt32(Console.ReadLine());
-
-                            try
-                            {
-                                var usuario = db.Usuario.Single(s => s.nCuenta == cuentaD);
-                                valid = true;
-                            }
-                            catch (InvalidOperationException) 
-                            {
-                                continue;
-                            }
-                        }
-                    }
-                    break;
-                case '3':
-                    return;
-            }
-            //Se pide el monto de depósito en centavos y se almacena en montoDeposito
-            Console.Write("Digite el monto de depósito en centavos: ");
-            montoDeposito = Convert.ToInt32(Console.ReadLine());
-            Console.WriteLine("Digite un concepto de pago (Opcional)");
-            concepto = Console.ReadLine();
-            Console.WriteLine("Inserte su dinero");
-            //Una vez ingresada la cantidad se inicia el timer
-            //Si el timer llega a 0, se ejecuta la función OnTimedEvent
-            tiempoDeposito.Enabled = true;
-            //La condicion dentro del while nos permite saber si el timer sigue corriendo
-            //Si sigue corriendo nos permite presionar una tecla (Ingresar el dinero)
-            //Si el timer ya llego a cero su propiedad Enabled sera false
-            while (tiempoDeposito.Enabled)
-            {
-                //Revisa si una tecla es presionada
-                if (Console.KeyAvailable == true)
-                {
-                    //Si la tecla es presionada, la lee y  detiene el timer 
-                    Console.ReadKey(true);
-                    tiempoDeposito.Enabled = false;
-                    using (var db = new Banco())
-                    {
-                        //Update el usuario
-                        var usuario = db.Usuario.Single(s => s.nCuenta == currentUser.nCuenta);
-                        var destinatario = db.Usuario.Single(s => s.nCuenta == cuentaD);
-                        //Modifica la propiedad saldo y le suma la cantidad depositada convertida a pesos
-                        destinatario.saldo += (montoDeposito/100);
-                        moneyAmount += montoDeposito / 100;
-                        //Crea un detalle nuevo
-                        Detalle detalle = new Detalle();
-                        detalle.fecha = DateTime.Now;
-                        detalle.tipo = db.TipoConcepto.Single(s => s.id == 3);
-                        detalle.monto = (montoDeposito / 100);
-                        detalle.concepto = concepto != null ? concepto : db.TipoConcepto.Single(s => s.id == 3).nombre;
-                        detalle._destinatario = destinatario;
-                        //Crea una transaccion nueva
-                        Transaccion transaccion = new Transaccion();
-                        transaccion._usuario = usuario;
-                        transaccion._detalle = detalle;
-                        //Actualizar las tablas
-                        db.Transaccion.Add(transaccion);
-                        db.Detalle.Add(detalle);
-                        db.SaveChanges();
-                        //Muestra un mensaje por un segundo y regresa al menú principal
-                        Console.WriteLine("Depósito realizado con éxito");
-                        System.Threading.Thread.Sleep(1000);
-
-                    }
-                }
-            }
-        }
        
-        public int SeleccionaMes()
+
+
+
+
+
+
+
+        public static int SeleccionaMes()
         {
-            ConsoleKeyInfo k;
             int mes;
             do
             {
                 Console.WriteLine("Selecciona un mes (Enter para mes actual)");
-                for (int i = 0; i < meses.Count(); i++)
+                for (int i = 1; i < 13; i++)
                 {
-                    Console.WriteLine($"[{i + 1}] {meses[i]}");
+                    string fullMonthName = new DateTime(2019, i, 1).ToString("MMMM", CultureInfo.CreateSpecificCulture("es"));
+                    Console.WriteLine($"[{i}] {fullMonthName}");
                 }
-                    k = Console.ReadKey(true);
-                    mes = Convert.ToInt32(k.KeyChar)-48;
-                    if (mes == -35)
-                        mes = DateTime.Now.Month;
+                try 
+                {
+                   mes = Convert.ToInt32(Console.ReadLine());
+                } catch (FormatException)
+                {
+                    mes = DateTime.Now.Month;
+                }
             } while (mes < 1 || mes > 12);
             Console.Clear();
             return mes;
-        }
-
-        public void HistorialUsuario()
-        {
-
-            ConsoleKeyInfo opcionMenu;
-            //Se muestra un menú con las operaciones disponibles del ATM
-            Console.WriteLine("Ver: \n[1] Consultas de Saldo \n[2] Retiros \n[3] Depósitos\n[4] Salir");
-            opcionMenu = Console.ReadKey(true);
-            Console.Clear();
-            //Maneja las opciones del menu basado en la tecla presionada
-            switch (opcionMenu.KeyChar)
-            {
-                case '1':
-                    Console.WriteLine("Consultas de Saldo");
-                    VerTransaccion(SeleccionaMes(), "consulta");
-                    break;
-                case '2':
-                    Console.WriteLine("Retiros");
-                    VerTransaccion(SeleccionaMes(), "retiro");
-                    break;
-                case '3':
-                    Console.WriteLine("Depositos");
-                    VerTransaccion(SeleccionaMes(), "deposito");
-                    break;
-            }
-        }
-
-        private void VerTransaccion( int mes, string tipo)
-        {
-            using (var db = new Banco())
-            {
-                var Transacciones = db.Transaccion.ToList();
-                var tiposConcepto = db.TipoConcepto.ToList();
-                var usuarios = db.Usuario.ToList();
-                currentUser.transacciones = db.Transaccion.Where(t => t._usuario == currentUser
-                && t._detalle.tipo == db.TipoConcepto.Single(s => s.nombre == tipo)
-                && t._detalle.fecha.Month == mes)
-                .Include(transaccion => transaccion._detalle).ToList();
-                foreach (var transaccion in currentUser.transacciones)
-                {
-                    switch (tipo)
-                    {
-                        case "consulta":
-                            Console.WriteLine("<------------------------------------------->");
-                            Console.WriteLine($"Fecha: {transaccion._detalle.fecha}");
-                            Console.WriteLine($"Concepto: {transaccion._detalle.concepto}");
-                            break;
-                        case "retiro":
-                            Console.WriteLine("<------------------------------------------->");
-                            Console.WriteLine($"Fecha: {transaccion._detalle.fecha}");
-                            Console.WriteLine($"Monto: {transaccion._detalle.monto}");
-                            break;
-                        case "deposito":
-                            Console.WriteLine("<------------------------------------------->");
-                            Console.WriteLine($"Fecha: {transaccion._detalle.fecha}");
-                            Console.WriteLine($"Monto: {transaccion._detalle.monto}");
-                            Console.WriteLine($"Concepto: {transaccion._detalle.concepto}");
-                            Console.WriteLine($"Destinatario: {transaccion._detalle._destinatario.pNombre} {transaccion._detalle._destinatario.pApellido}");
-                            break;
-                    }
-                }
-                if (currentUser.transacciones.Count() == 0)
-                    Console.WriteLine("No hay Resultados");
-                Console.WriteLine("Presione una tecla para continuar");
-            }
-            Console.ReadLine();
-
-        }
-
-        //Este método dibuja el menú para escoger las opciones de retiro de efectivo
-        private void Retiro()
-        {
-            while (true)
-            {
-                ConsoleKeyInfo opcionRetiro;
-                int montoRetiro = 0;
-                Console.Clear();
-                //Muestra las opciones posibles de retiro 
-                Console.WriteLine("Presione el número correspondiente al monto que desea retirar \n[1] $20 \n[2] $40 \n[3] $60 \n[4] $100 \n[5] $200 \n[6] Personalizado\n[0] Cancelar Operación");
-                opcionRetiro = Console.ReadKey(true);
-                Console.Clear();
-                //Dependiendo de la opcion elegida se asigna un valor a montoRetiro o se cancela la operación
-                switch (opcionRetiro.KeyChar)
-                {
-                    case '0':
-                        Console.WriteLine("Operación Cancelada");
-                        System.Threading.Thread.Sleep(750);
-                        UsuarioMenuPrincipal();
-                        break;
-                    case '1':
-                        montoRetiro = 20;
-                        break;
-                    case '2':
-                        montoRetiro = 40;
-                        break;
-                    case '3':
-                        montoRetiro = 60;
-                        break;
-                    case '4':
-                        montoRetiro = 100;
-                        break;
-                    case '5':
-                        montoRetiro = 200;
-                        break;
-                    case '6':
-                        Console.Clear();
-                        Console.WriteLine("Digite el monto a retirar:");
-                        montoRetiro = Convert.ToInt32(Console.ReadLine());
-                        break;
-                    default:
-                        Console.WriteLine("Seleccione una opcion válida");
-                        System.Threading.Thread.Sleep(750);
-                        continue;
-                }
-                //Se prueba si el monto a retirar es mayor al saldo del usuario y arroja un error
-                if (currentUser.saldo < montoRetiro)
-                {
-                    Console.WriteLine("Fondos Insuficientes, seleccione un monto menor");
-                    System.Threading.Thread.Sleep(1000);
-                    continue;
-                }
-                //Comprueba si el cajero tiene suficiente dinero físico para el retiro
-                else if (montoRetiro > moneyAmount)
-                {
-                    Console.WriteLine("El cajero no tiene suficiente efectivo, seleccione un monto menor");
-                    System.Threading.Thread.Sleep(1000);
-                    continue;
-                }
-                //Si todo es correcto, el montoARetirar se resta al saldo del usuario y se entrega el dinero
-                else
-                {
-                    currentUser.saldo = (currentUser.saldo - montoRetiro);
-                    moneyAmount -= montoRetiro;
-                    Console.WriteLine("Tome su dinero ↓");
-                    System.Threading.Thread.Sleep(4000);
-
-                    using (var db = new Banco())
-                    {
-                        //Update el usuario
-                        var usuario = db.Usuario.Single(s => s.nCuenta == currentUser.nCuenta);
-                        usuario.saldo -= montoRetiro;
-                        //Crea un detalle nuevo
-                        Detalle detalle = new Detalle();
-                        detalle.fecha = DateTime.Now;
-                        detalle.concepto = db.TipoConcepto.Single(s => s.id == 1).nombre;
-                        detalle.tipo = db.TipoConcepto.Single(s => s.id == 1);
-                        detalle.monto = montoRetiro;
-                        //Crea una transaccion nueva
-                        Transaccion transaccion = new Transaccion();
-                        transaccion._usuario = usuario;
-                        transaccion._detalle = detalle;
-                        //Actualizar las tablas
-                        db.Transaccion.Add(transaccion);
-                        db.Detalle.Add(detalle);
-                        db.SaveChanges();
-                    }
-                    return;
-                }
-            }
         }
 
 
