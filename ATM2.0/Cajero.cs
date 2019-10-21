@@ -13,7 +13,7 @@ namespace ATM2._0
     public class Cajero
     {
         private int moneyAmount { get; set; }
-        public Usuario currentUser { get; set; }    
+        private Usuario currentUser { get; set; }    
         public Cajero()
         {
             moneyAmount = 10000;
@@ -74,7 +74,7 @@ namespace ATM2._0
         }
 
 
-        public void ActualizarUsuario()
+        private void ActualizarUsuario()
         {
             using (var db = new Banco())
             currentUser = db.Usuario.Single(s => s.nCuenta == currentUser.nCuenta);
@@ -123,7 +123,7 @@ namespace ATM2._0
             }
         }
 
-        public void GerenteMenuPrincipal()
+        private void GerenteMenuPrincipal()
         {
             while (true)
             {
@@ -158,14 +158,6 @@ namespace ATM2._0
             }
         }
 
-       
-
-
-
-
-
-
-
         public static int SeleccionaMes()
         {
             int mes;
@@ -188,7 +180,5 @@ namespace ATM2._0
             Console.Clear();
             return mes;
         }
-
-
     }
 }

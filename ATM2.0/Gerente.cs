@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ATM2._0
 {
-    class Gerente: Usuario
+    static class Gerente
     {
         public static void ReportesTransaccion()
         {
@@ -98,9 +98,5 @@ namespace ATM2._0
                 Console.ReadLine();
             }
         }
-
-
-
-
     }
 }
