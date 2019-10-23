@@ -80,12 +80,14 @@ namespace ATM2._0
                 var Transacciones = db.Transaccion.ToList();
                 var tiposConcepto = db.TipoConcepto.ToList();
                 var usuarios = db.Usuario.ToList();
+                var detalles = db.Detalle.ToList();
                 var transacciones = db.Transaccion.Where(t => t._detalle.tipo == db.TipoConcepto.Single(s => s.nombre == tipo)
                && t._detalle.fecha.Month == mes).ToList();
                 if (modo)
                 {
                     foreach (var t in transacciones)
                     {
+                        
                         total += t._detalle.monto;
                     }
                     Console.WriteLine($"Reporte de {fullMonthName} de Monto de {tipo}s: ${total}");

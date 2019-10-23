@@ -45,7 +45,6 @@ namespace ATM2._0
             //        Console.WriteLine($"NIP: {System.Text.Encoding.UTF8.GetString(base64EncodedBytes)}");
             //        Console.WriteLine($"TipoUsuario: {user.tipo.nombre}");
             //        Console.WriteLine("<----------------------------------------->");
-
             //    }
             //}
             //Console.ReadLine();
